@@ -72,14 +72,14 @@ func tempPush(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		tempInside, err := strconv.ParseFloat(c.Request.URL.Query().Get("inside"), 32)
+		tempInside, err := strconv.ParseFloat(c.Query("inside"), 32)
 		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong tempInside: %q", err))
+			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong param \"inside\": %q", err))
 			return
 		}
-		tempOutside, err := strconv.ParseFloat(c.Request.URL.Query().Get("outside"), 32)
+		tempOutside, err := strconv.ParseFloat(c.Query("outside"), 32)
 		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong tempOutside: %q", err))
+			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong param \"outside\": %q", err))
 			return
 		}
 
