@@ -46,18 +46,20 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 		isEmpty := true
 
+		c.String(http.StatusOK, "<table><tr><th>Время добавления</th><th>Темп. внутри</th><th>Темп. снаружи</th></tr>")
 		for rows.Next() {
 			var timestamp time.Time
 			var tempInside, tempOutside float32
-			isEmpty = true
+			isEmpty = false
 
 			if err := rows.Scan(&timestamp, &tempInside, &tempOutside); err != nil {
 				c.String(http.StatusInternalServerError, fmt.Sprintf("Error scanning data: %q", err))
 				return
 			}
 
-			c.String(http.StatusOK, fmt.Sprintf("%s %.1f %.1f", timestamp.String(), tempInside, tempOutside))
+			c.String(http.StatusOK, fmt.Sprintf("<tr><td>%s</td><td>%.1f</td><td>%.1f</td></tr>", timestamp.String(), tempInside, tempOutside))
 		}
+		c.String(http.StatusOK, "</table>")
 
 		if isEmpty {
 			c.String(http.StatusOK, "No data available")
