@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,14 +17,20 @@ func resp(c *gin.Context) {
 	c.String(http.StatusOK, "Hello, world!")
 }
 
+func maybeCreateTempDB(db *sql.DB) error {
+	_, err := db.Exec(
+		`CREATE TABLE IF NOT EXISTS tempdata(
+			time timestamp PRIMARY KEY,
+			tempInside real NOT NULL,
+			tempOutside real NOT NULL
+		)`)
+
+	return err
+}
+
 func tempGet(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if _, err := db.Exec(
-			`CREATE TABLE IF NOT EXISTS tempdata(
-				time timestamp PRIMARY KEY,
-				tempInside real NOT NULL,
-				tempOutside real NOT NULL
-			)`); err != nil {
+		if err := maybeCreateTempDB(db); err != nil {
 			c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating table: %q", err))
 			return
 		}
@@ -58,6 +65,33 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+func tempPush(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if err := maybeCreateTempDB(db); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating table: %q", err))
+			return
+		}
+
+		tempInside, err := strconv.ParseFloat(c.Request.URL.Query().Get("inside"), 32)
+		if err != nil {
+			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong tempInside: %q", err))
+			return
+		}
+		tempOutside, err := strconv.ParseFloat(c.Request.URL.Query().Get("outside"), 32)
+		if err != nil {
+			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong tempOutside: %q", err))
+			return
+		}
+
+		if _, err := db.Exec("INSERT INTO tempdata VALUES($1, $2, $3)", time.Now(), tempInside, tempOutside); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Error inserting data: %q", err))
+			return
+		}
+
+		c.String(http.StatusOK, "Data added")
+	}
+}
+
 func main() {
 	port := os.Getenv("PORT")
 
@@ -74,6 +108,7 @@ func main() {
 	router.Use(gin.Logger())
 	router.GET("/", resp)
 	router.GET("/gettemp", tempGet(db))
+	router.POST("/pushtemp", tempPush(db))
 
 	router.Run(":" + port)
 }
