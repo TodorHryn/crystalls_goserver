@@ -116,6 +116,7 @@ func main() {
 	router.Use(gin.Logger())
 	router.GET("/", tempGet(db))
 	router.POST("/pushtemp", tempPush(db))
+	router.GET("/pushtemp", tempPush(db))
 
 	router.Run(":" + port)
 }
