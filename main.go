@@ -67,7 +67,7 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.GET("/", resp)
-	router.POST("/gettemp", tempGet(db))
+	router.GET("/gettemp", tempGet(db))
 
 	router.Run(":" + port)
 }
