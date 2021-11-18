@@ -46,7 +46,9 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 		isEmpty := true
 
-		html := "<html><body><table><tr><th>Время добавления</th><th>Темп. внутри</th><th>Темп. снаружи</th></tr>"
+		html := "<html>"
+		html += "<head><style>table, th, td { border : 1px solid black; } </style></head>"
+		html += "<body><table><tr><th>Время добавления</th><th>Темп. внутри</th><th>Темп. снаружи</th></tr>"
 		for rows.Next() {
 			var timestamp time.Time
 			var tempInside, tempOutside float32
@@ -57,7 +59,8 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
-			html += fmt.Sprintf("<tr><td>%s</td><td>%.1f</td><td>%.1f</td></tr>", timestamp.String(), tempInside, tempOutside)
+			html += fmt.Sprintf("<tr><td>%d-%02d-%02d %02d:%02d:%02d</td><td>%.1f</td><td>%.1f</td></tr>",
+				timestamp.Year(), timestamp.Month(), timestamp.Day(), timestamp.Hour(), timestamp.Minute(), timestamp.Second(), tempInside, tempOutside)
 		}
 		html += "</table></body></html>"
 
