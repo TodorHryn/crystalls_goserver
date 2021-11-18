@@ -64,7 +64,8 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 		if isEmpty {
 			c.String(http.StatusOK, "No data available")
 		} else {
-			c.String(http.StatusOK, html)
+			c.Writer.WriteHeader(http.StatusOK)
+			c.Writer.Write([]byte(html))
 		}
 	}
 }
@@ -110,8 +111,7 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger())
-	router.GET("/", resp)
-	router.GET("/gettemp", tempGet(db))
+	router.GET("/", tempGet(db))
 	router.POST("/pushtemp", tempPush(db))
 
 	router.Run(":" + port)
