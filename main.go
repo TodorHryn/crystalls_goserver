@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
@@ -72,11 +73,11 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 		if isEmpty {
 			c.String(http.StatusOK, "No data available")
 		} else {
-			var html string
+			html := new(bytes.Buffer)
 			line.Render(html)
 
 			c.Writer.WriteHeader(http.StatusOK)
-			c.Writer.Write([]byte(html))
+			c.Writer.Write([]byte(html.String()))
 		}
 	}
 }
