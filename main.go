@@ -97,7 +97,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				c.String(http.StatusInternalServerError, "Can't find </style>")
 				return
 			}
-			htmlstr = htmlstr[:i] + ".body{background-color:#333;}" + htmlstr[i:]
+			htmlstr = htmlstr[:i] + "body{background-color:#333;}" + htmlstr[i:]
 
 			c.Writer.WriteHeader(http.StatusOK)
 			c.Writer.Write([]byte(htmlstr))
