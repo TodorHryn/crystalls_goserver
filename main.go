@@ -54,7 +54,8 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				Subtitle: "My temp chart",
 			}),
 		)
-		items := make([]opts.LineData, 0)
+		itemsTInside := make([]opts.LineData, 0)
+		itemsTOutside := make([]opts.LineData, 0)
 		xaxis := make([]string, 0)
 		for rows.Next() {
 			var timestamp time.Time
@@ -66,10 +67,12 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
-			items = append(items, opts.LineData{Value: tempInside})
+			itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
+			itemsTOutside = append(itemsTOutside, opts.LineData{Value: tempOutside})
 			xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", timestamp.Hour(), timestamp.Minute(), timestamp.Second()))
 		}
-		line.SetXAxis(xaxis).AddSeries("Inside", items).
+		line.SetXAxis(xaxis).AddSeries("Inside", itemsTInside).
+			SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
 			SetSeriesOptions(
 				charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
 				charts.WithLabelOpts(opts.Label{Show: true}),
