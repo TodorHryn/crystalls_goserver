@@ -54,6 +54,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				Subtitle: "My temp chart",
 			}),
 			charts.WithLegendOpts(opts.Legend{
+				Show:   true,
 				Bottom: "5px",
 				TextStyle: &opts.TextStyle{
 					Color: "#eee",
