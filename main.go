@@ -48,7 +48,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 		line := charts.NewLine()
 		line.SetGlobalOptions(
-			charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeWesteros}),
+			charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeMacarons}),
 			charts.WithTitleOpts(opts.Title{
 				Title:    "Temperature char",
 				Subtitle: "My temp chart",
