@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +16,8 @@ import (
 	"github.com/go-echarts/go-echarts/v2/types"
 	_ "github.com/lib/pq"
 )
+
+var charthtml string
 
 func maybeCreateTempDB(db *sql.DB) error {
 	_, err := db.Exec(
@@ -47,60 +48,58 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 		isEmpty := true
 
-		line := charts.NewLine()
-		line.SetGlobalOptions(
-			charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeMacarons}),
-			charts.WithTitleOpts(opts.Title{
-				Title:    "Temperature char",
-				Subtitle: "My temp chart",
-			}),
-			charts.WithLegendOpts(opts.Legend{
-				Show:   true,
-				Bottom: "5px",
-				TextStyle: &opts.TextStyle{
-					Color: "#eee",
-				},
-			}),
-		)
-		itemsTInside := make([]opts.LineData, 0)
-		itemsTOutside := make([]opts.LineData, 0)
-		xaxis := make([]string, 0)
-		for rows.Next() {
-			var timestamp time.Time
-			var tempInside, tempOutside float32
-			isEmpty = false
-
-			if err := rows.Scan(&timestamp, &tempInside, &tempOutside); err != nil {
-				c.String(http.StatusInternalServerError, fmt.Sprintf("Error scanning data: %q", err))
-				return
-			}
-
-			itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
-			itemsTOutside = append(itemsTOutside, opts.LineData{Value: tempOutside})
-			xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", timestamp.Hour(), timestamp.Minute(), timestamp.Second()))
-		}
-		line.SetXAxis(xaxis).AddSeries("Inside", itemsTInside).
-			SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
-			SetSeriesOptions(
-				charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
-				charts.WithLabelOpts(opts.Label{Show: true}),
+		if len(charthtml) == 0 {
+			line := charts.NewLine()
+			line.SetGlobalOptions(
+				charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeMacarons}),
+				charts.WithTitleOpts(opts.Title{
+					Title:    "Temperature char",
+					Subtitle: "My temp chart",
+				}),
+				charts.WithLegendOpts(opts.Legend{
+					Show:   true,
+					Bottom: "5px",
+					TextStyle: &opts.TextStyle{
+						Color: "#000",
+					},
+				}),
 			)
+			itemsTInside := make([]opts.LineData, 0)
+			itemsTOutside := make([]opts.LineData, 0)
+			xaxis := make([]string, 0)
+			for rows.Next() {
+				var timestamp time.Time
+				var tempInside, tempOutside float32
+				isEmpty = false
+
+				if err := rows.Scan(&timestamp, &tempInside, &tempOutside); err != nil {
+					c.String(http.StatusInternalServerError, fmt.Sprintf("Error scanning data: %q", err))
+					return
+				}
+
+				itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
+				itemsTOutside = append(itemsTOutside, opts.LineData{Value: tempOutside})
+				xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", timestamp.Hour(), timestamp.Minute(), timestamp.Second()))
+			}
+			line.SetXAxis(xaxis).AddSeries("Inside", itemsTInside).
+				SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
+				SetSeriesOptions(
+					charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
+					charts.WithLabelOpts(opts.Label{Show: true}),
+				)
+
+			html := new(bytes.Buffer)
+			line.Render(html)
+			charthtml = html.String()
+		} else {
+			isEmpty = false
+		}
 
 		if isEmpty {
 			c.String(http.StatusOK, "No data available")
 		} else {
-			html := new(bytes.Buffer)
-			line.Render(html)
-			htmlstr := html.String()
-			i := strings.Index(htmlstr, "</style>")
-			if i == -1 {
-				c.String(http.StatusInternalServerError, "Can't find </style>")
-				return
-			}
-			htmlstr = htmlstr[:i] + "body{background-color:#333;}" + htmlstr[i:]
-
 			c.Writer.WriteHeader(http.StatusOK)
-			c.Writer.Write([]byte(htmlstr))
+			c.Writer.Write([]byte(charthtml))
 		}
 	}
 }
@@ -128,6 +127,7 @@ func tempPush(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		charthtml = ""
 		c.String(http.StatusOK, "Data added")
 	}
 }
