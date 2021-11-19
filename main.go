@@ -52,7 +52,8 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			charts.WithTitleOpts(opts.Title{
 				Title:    "Temperature char",
 				Subtitle: "My temp chart",
-			}))
+			}),
+		)
 		items := make([]opts.LineData, 0)
 		xaxis := make([]string, 0)
 		for rows.Next() {
@@ -68,7 +69,11 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			items = append(items, opts.LineData{Value: tempInside})
 			xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", timestamp.Hour(), timestamp.Minute(), timestamp.Second()))
 		}
-		line.SetXAxis(xaxis).AddSeries("Inside", items).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
+		line.SetXAxis(xaxis).AddSeries("Inside", items).
+			SetSeriesOptions(
+				charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
+				charts.WithLabelOpts(opts.Label{Show: true}),
+			)
 
 		if isEmpty {
 			c.String(http.StatusOK, "No data available")
