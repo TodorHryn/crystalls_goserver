@@ -53,6 +53,12 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				Title:    "Temperature char",
 				Subtitle: "My temp chart",
 			}),
+			charts.WithLegendOpts(opts.Legend{
+				Top: "5px",
+				TextStyle: &opts.TextStyle{
+					Color: "#eee",
+				},
+			}),
 		)
 		itemsTInside := make([]opts.LineData, 0)
 		itemsTOutside := make([]opts.LineData, 0)
