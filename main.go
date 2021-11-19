@@ -10,12 +10,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
 	_ "github.com/lib/pq"
 )
-
-func resp(c *gin.Context) {
-	c.String(http.StatusOK, "Hello, world!")
-}
 
 func maybeCreateTempDB(db *sql.DB) error {
 	_, err := db.Exec(
@@ -46,9 +45,15 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 		isEmpty := true
 
-		html := "<html>\n"
-		html += "<head><style>table, th, td { border : 1px solid black; } </style></head>\n"
-		html += "<body>\n<table>\n<tr><th>Время добавления</th><th>Темп. внутри</th><th>Темп. снаружи</th></tr>\n"
+		line := charts.NewLine()
+		line.SetGlobalOptions(
+			charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeWesteros}),
+			charts.WithTitleOpts(opts.Title{
+				Title:    "Temperature char",
+				Subtitle: "My temp chart",
+			}))
+		items := make([]opts.LineData, 0)
+		xaxis := make([]string, 0)
 		for rows.Next() {
 			var timestamp time.Time
 			var tempInside, tempOutside float32
@@ -59,14 +64,17 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
-			html += fmt.Sprintf("<tr><td>%d-%02d-%02d %02d:%02d:%02d</td><td>%.1f</td><td>%.1f</td></tr>\n",
-				timestamp.Year(), timestamp.Month(), timestamp.Day(), timestamp.Hour(), timestamp.Minute(), timestamp.Second(), tempInside, tempOutside)
+			items = append(items, opts.LineData{Value: tempInside})
+			xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", timestamp.Hour(), timestamp.Minute(), timestamp.Second()))
 		}
-		html += "</table>\n</body>\n</html>"
+		line.SetXAxis(xaxis).AddSeries("Inside", items).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
 
 		if isEmpty {
 			c.String(http.StatusOK, "No data available")
 		} else {
+			var html string
+			line.Render(html)
+
 			c.Writer.WriteHeader(http.StatusOK)
 			c.Writer.Write([]byte(html))
 		}

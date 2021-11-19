@@ -1,10 +1,12 @@
 module github.com/TodorHryn/crystalls_goserver
 
 go 1.17
+
 // +heroku goVersion go1.17
 
 require (
 	github.com/gin-gonic/gin v1.7.4
+	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/lib/pq v1.10.4
 )
 
