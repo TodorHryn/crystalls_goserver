@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -90,9 +91,16 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 		} else {
 			html := new(bytes.Buffer)
 			line.Render(html)
+			htmlstr := html.String()
+			i := strings.Index(htmlstr, "</style>")
+			if i == -1 {
+				c.String(http.StatusInternalServerError, "Can't find </style>")
+				return
+			}
+			htmlstr = htmlstr[:i] + ".body{background-color:#333" + htmlstr[i:]
 
 			c.Writer.WriteHeader(http.StatusOK)
-			c.Writer.Write([]byte(html.String()))
+			c.Writer.Write([]byte(htmlstr))
 		}
 	}
 }
