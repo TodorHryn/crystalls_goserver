@@ -43,6 +43,38 @@ func dropDB(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+func lastTemp(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if err := maybeCreateTempDB(db); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating table: %q", err))
+			return
+		}
+
+		rows, err := db.Query(`SELECT time FROM tempdata WHERE time=(SELECT max(time) FROM tempdata)`)
+
+		if err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Error selecting data: %q", err))
+			return
+		}
+
+		defer rows.Close()
+		if !rows.Next() {
+			c.String(http.StatusOK, "No data available")
+			return
+		}
+
+		var timestamp1 time.Time
+		if err := rows.Scan(&timestamp1); err != nil {
+			c.String(http.StatusInternalServerError, "Failed to scan data: %q", err)
+			return
+		}
+
+		timestamp2 := time.Now()
+		t := timestamp2.Sub(timestamp1)
+		c.String(http.StatusOK, fmt.Sprintf("Last update was %02d:%02d:%02d before", t.Hours(), t.Minutes(), t.Seconds()))
+	}
+}
+
 func tempGet(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := maybeCreateTempDB(db); err != nil {
@@ -164,6 +196,7 @@ func main() {
 	router.GET("/pushtemp", tempPush(db))
 	router.POST("/resettemp", dropDB(db))
 	router.GET("/resettemp", dropDB(db))
+	router.GET("/lastupdate", lastTemp(db))
 
 	router.Run(":" + port)
 }
