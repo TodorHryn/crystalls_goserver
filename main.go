@@ -71,7 +71,7 @@ func lastTemp(db *sql.DB) gin.HandlerFunc {
 
 		timestamp2 := time.Now()
 		t := timestamp2.Sub(timestamp1)
-		c.String(http.StatusOK, fmt.Sprintf("Last update was %02d:%02d:%02d before", t.Hours(), t.Minutes(), t.Seconds()))
+		c.String(http.StatusOK, fmt.Sprintf("Last update was %02d:%02d:%02d before", int(t.Hours()), int(t.Minutes()), int(t.Seconds())))
 	}
 }
 
