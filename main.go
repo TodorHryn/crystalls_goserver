@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -127,11 +126,8 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 					return
 				}
 
-				if tempInside < 2 || tempInside > 40 {
-					tempInside = math.NaN()
-				}
-				if tempOutside < 2 || tempOutside > 40 {
-					tempOutside = math.NaN()
+				if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 {
+					continue
 				}
 
 				itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
