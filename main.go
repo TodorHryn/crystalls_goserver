@@ -132,7 +132,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 				itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
 				itemsTOutside = append(itemsTOutside, opts.LineData{Value: tempOutside})
-				xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+6)%24, timestamp.Minute(), timestamp.Second()))
+				xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
 			}
 			line.SetXAxis(xaxis).AddSeries("Inside", itemsTInside).
 				SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
