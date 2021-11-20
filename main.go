@@ -130,7 +130,6 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
 				SetSeriesOptions(
 					charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
-					charts.WithLabelOpts(opts.Label{Show: true}),
 				)
 
 			html := new(bytes.Buffer)
