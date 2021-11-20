@@ -38,6 +38,7 @@ func dropDB(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		charthtml = ""
 		c.String(http.StatusOK, "Drop ok")
 	}
 }
