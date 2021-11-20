@@ -30,6 +30,18 @@ func maybeCreateTempDB(db *sql.DB) error {
 	return err
 }
 
+func dropDB(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, err := db.Exec("DROP TABLE tempdata")
+		if err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Can't drop table: %q", err))
+			return
+		}
+
+		c.String(http.StatusOK, "Drop ok")
+	}
+}
+
 func tempGet(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := maybeCreateTempDB(db); err != nil {
@@ -149,6 +161,8 @@ func main() {
 	router.GET("/", tempGet(db))
 	router.POST("/pushtemp", tempPush(db))
 	router.GET("/pushtemp", tempPush(db))
+	router.POST("/resettemp", dropDB(db))
+	router.GET("/resettemp", dropDB(db))
 
 	router.Run(":" + port)
 }
