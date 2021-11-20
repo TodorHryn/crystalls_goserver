@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -118,12 +119,19 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			xaxis := make([]string, 0)
 			for rows.Next() {
 				var timestamp time.Time
-				var tempInside, tempOutside float32
+				var tempInside, tempOutside float64
 				isEmpty = false
 
 				if err := rows.Scan(&timestamp, &tempInside, &tempOutside); err != nil {
 					c.String(http.StatusInternalServerError, fmt.Sprintf("Error scanning data: %q", err))
 					return
+				}
+
+				if tempInside < 2 || tempInside > 40 {
+					tempInside = math.NaN()
+				}
+				if tempOutside < 2 || tempOutside > 40 {
+					tempOutside = math.NaN()
 				}
 
 				itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
