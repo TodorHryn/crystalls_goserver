@@ -156,6 +156,52 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+func tempDump(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if err := maybeCreateTempDB(db); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating table: %q", err))
+			return
+		}
+
+		rows, err := db.Query(`SELECT time, tempInside, tempOutside FROM tempdata`)
+
+		if err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Error selecting data: %q", err))
+			return
+		}
+
+		defer rows.Close()
+
+		isEmpty := true
+		var tempInsideDump string
+		var tempOutsideDump string
+
+		for rows.Next() {
+			var timestamp time.Time
+			var tempInside, tempOutside float64
+			isEmpty = false
+
+			if err := rows.Scan(&timestamp, &tempInside, &tempOutside); err != nil {
+				c.String(http.StatusInternalServerError, fmt.Sprintf("Error scanning data: %q", err))
+				return
+			}
+
+			if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 {
+				continue
+			}
+
+			tempInsideDump += fmt.Sprintf(" %02d", tempInside)
+			tempOutsideDump += fmt.Sprintf(" %02d", tempOutside)
+		}
+
+		if isEmpty {
+			c.String(http.StatusOK, "No data available")
+		} else {
+			c.String(http.StatusOK, tempInsideDump+"\n"+tempOutsideDump)
+		}
+	}
+}
+
 func tempPush(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := maybeCreateTempDB(db); err != nil {
@@ -199,6 +245,7 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.GET("/", tempGet(db))
+	router.GET("/gettemp", tempDump(db))
 	router.POST("/pushtemp", tempPush(db))
 	router.GET("/pushtemp", tempPush(db))
 	router.POST("/resettemp", dropDB(db))
