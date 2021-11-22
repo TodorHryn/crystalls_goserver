@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -79,6 +80,10 @@ type ChartData struct {
 	DataTInside  []float64
 	DataTOutside []float64
 	DataHumidity []float64
+	MinTemp      float64
+	MaxTemp      float64
+	MinHumidity  float64
+	MaxHumidity  float64
 }
 
 func tempGet(db *sql.DB) gin.HandlerFunc {
@@ -100,10 +105,12 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 		isEmpty := true
 
 		if len(charthtml) == 0 {
-			itemsTInside := make([]float64, 0)
-			itemsTOutside := make([]float64, 0)
-			itemsHum := make([]float64, 0)
-			xaxis := make([]string, 0)
+			var chartData ChartData
+			chartData.MaxHumidity = 0
+			chartData.MinHumidity = 100
+			chartData.MaxTemp = 0
+			chartData.MinTemp = 100
+
 			for rows.Next() {
 				var timestamp time.Time
 				var tempInside, tempOutside, humidity float64
@@ -118,22 +125,23 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 					continue
 				}
 
-				itemsTInside = append(itemsTInside, tempInside)
-				itemsTOutside = append(itemsTOutside, tempOutside)
-				itemsHum = append(itemsHum, humidity)
-				xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
+				chartData.MinHumidity = math.Min(chartData.MinHumidity, humidity)
+				chartData.MaxHumidity = math.Min(chartData.MaxHumidity, humidity)
+				chartData.MinTemp = math.Min(chartData.MinTemp, tempInside)
+				chartData.MinTemp = math.Min(chartData.MinTemp, tempOutside)
+				chartData.MaxTemp = math.Min(chartData.MaxTemp, tempInside)
+				chartData.MaxTemp = math.Min(chartData.MaxTemp, tempOutside)
+
+				chartData.DataTInside = append(chartData.DataTInside, tempInside)
+				chartData.DataTOutside = append(chartData.DataTOutside, tempOutside)
+				chartData.DataHumidity = append(chartData.DataHumidity, humidity)
+				chartData.Labels = append(chartData.Labels, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
 			}
 			html, err2 := template.ParseFiles("main.html")
 			if err2 != nil {
 				c.String(http.StatusInternalServerError, fmt.Sprintf("Error parsing template: %q", err2))
 				return
 			}
-
-			var chartData ChartData
-			chartData.Labels = xaxis
-			chartData.DataTInside = itemsTInside
-			chartData.DataTOutside = itemsTOutside
-			chartData.DataHumidity = itemsHum
 
 			htmlBuf := new(bytes.Buffer)
 			html.Execute(htmlBuf, chartData)

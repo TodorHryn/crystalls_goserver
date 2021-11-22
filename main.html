@@ -40,18 +40,21 @@
                         yAxes: [{
                             id : "Temp",
                             type : "linear",
-                            position : "left"
+                            position : "left",
+                            ticks : {
+                                suggestedMin : {{ .MinTemp}},
+                                suggestedMax : {{ .MaxTemp}}
+                            }
                         },
                         {
                             id : "Humidity",
                             type : "linear",
-                            position : "right"
+                            position : "right",
+                            ticks : {
+                                suggestedMin : {{ .MinHumidity}},
+                                suggestedMax : {{ .MaxHumidity}}
+                            }
                         }]
-                    },
-                    layout : {
-                        padding : {
-                            top : 5
-                        }
                     }
                 }
                 });
