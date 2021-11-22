@@ -133,7 +133,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 				tempInsideSum += tempInside
 				tempOutsideSum += tempOutside
-				tempSize += tempSize
+				tempSize++
 
 				chartData.MinHumidity = math.Min(chartData.MinHumidity, humidity)
 				chartData.MaxHumidity = math.Max(chartData.MaxHumidity, humidity)
