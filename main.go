@@ -110,6 +110,12 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			chartData.MinHumidity = 100
 			chartData.MaxTemp = 0
 			chartData.MinTemp = 100
+			var tempInsideSum float64
+			var tempOutsideSum float64
+			var tempSize int
+			tempInsideSum = 0
+			tempOutsideSum = 0
+			tempSize = 0
 
 			for rows.Next() {
 				var timestamp time.Time
@@ -125,6 +131,10 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 					continue
 				}
 
+				tempInsideSum += tempInside
+				tempOutsideSum += tempOutside
+				tempSize += tempSize
+
 				chartData.MinHumidity = math.Min(chartData.MinHumidity, humidity)
 				chartData.MaxHumidity = math.Max(chartData.MaxHumidity, humidity)
 				chartData.MinTemp = math.Min(chartData.MinTemp, tempInside)
@@ -137,6 +147,14 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				chartData.DataHumidity = append(chartData.DataHumidity, humidity)
 				chartData.Labels = append(chartData.Labels, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
 			}
+			tempInsideAvg := tempInsideSum / float64(tempSize)
+			tempOutsideAvg := tempOutsideSum / float64(tempSize)
+			tempAvgDiff := tempInsideAvg - tempOutsideAvg
+
+			for i := range chartData.DataTOutside {
+				chartData.DataTOutside[i] += tempAvgDiff
+			}
+
 			dtemp := (chartData.MaxTemp - chartData.MinTemp) / 10
 			chartData.MinTemp -= dtemp
 			chartData.MaxTemp += dtemp
