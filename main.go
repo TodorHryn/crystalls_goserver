@@ -75,7 +75,7 @@ func lastTemp(db *sql.DB) gin.HandlerFunc {
 }
 
 type ChartData struct {
-	Data string
+	Data []float64
 }
 
 func tempGet(db *sql.DB) gin.HandlerFunc {
@@ -127,7 +127,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			}
 
 			var chartData ChartData
-			chartData.Data = "Hello!"
+			chartData.Data = itemsTInside
 
 			htmlBuf := new(bytes.Buffer)
 			html.Execute(htmlBuf, chartData)
