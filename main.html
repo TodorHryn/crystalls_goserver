@@ -5,7 +5,9 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
     </head>
     <body>
-        <canvas id="line-chart" width="800" height="450"></canvas>
+        <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+            <canvas id="line-chart"></canvas>
+        </div>
         <script>
             new Chart(document.getElementById("line-chart"), {
                 type: 'line',
@@ -32,6 +34,8 @@
                     }]
                 },
                 options: {
+                    maintainAspectRation : false,
+                    responsive : true,
                     title: {
                         display: true,
                         text: 'Crystall grower status'
