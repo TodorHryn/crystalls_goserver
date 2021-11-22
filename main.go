@@ -75,7 +75,10 @@ func lastTemp(db *sql.DB) gin.HandlerFunc {
 }
 
 type ChartData struct {
-	Data []float64
+	Labels       []string
+	DataTInside  []float64
+	DataTOutside []float64
+	DataHumidity []float64
 }
 
 func tempGet(db *sql.DB) gin.HandlerFunc {
@@ -127,7 +130,10 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			}
 
 			var chartData ChartData
-			chartData.Data = itemsTInside
+			chartData.Labels = xaxis
+			chartData.DataTInside = itemsTInside
+			chartData.DataTOutside = itemsTOutside
+			chartData.DataHumidity = itemsHum
 
 			htmlBuf := new(bytes.Buffer)
 			html.Execute(htmlBuf, chartData)

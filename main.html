@@ -10,7 +10,18 @@
             new Chart(document.getElementById("line-chart"), {
                 type: 'line',
                 data: {
-                    {{ .Data}}
+                    labels: {{ .Labels}},
+                    datasets: [{
+                        data : {{ .DataTInside}},
+                        label : "Temp inside"
+                    }, {
+                        data : {{ .DataTOutside}},
+                        label : "Temp outside"
+                    }, {
+                        data : {{ .DataHumidity}},
+                        label : "Humidity"
+                    }
+                    ]
                 },
                 options: {
                     title: {
