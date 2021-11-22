@@ -113,12 +113,12 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 					Min:  "dataMin",
 					Max:  "dataMax",
 					Name: "Temp",
-				}, 0),
+				}, []int{0}),
 				charts.WithYAxisOpts(opts.YAxis{
 					Min:  "dataMin",
 					Max:  "dataMax",
 					Name: "Humidity",
-				}, 1),
+				}, []int{1}),
 			)
 			itemsTInside := make([]opts.LineData, 0)
 			itemsTOutside := make([]opts.LineData, 0)
