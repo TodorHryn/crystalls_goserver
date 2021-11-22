@@ -126,17 +126,24 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 				}
 
 				chartData.MinHumidity = math.Min(chartData.MinHumidity, humidity)
-				chartData.MaxHumidity = math.Min(chartData.MaxHumidity, humidity)
+				chartData.MaxHumidity = math.Max(chartData.MaxHumidity, humidity)
 				chartData.MinTemp = math.Min(chartData.MinTemp, tempInside)
 				chartData.MinTemp = math.Min(chartData.MinTemp, tempOutside)
-				chartData.MaxTemp = math.Min(chartData.MaxTemp, tempInside)
-				chartData.MaxTemp = math.Min(chartData.MaxTemp, tempOutside)
+				chartData.MaxTemp = math.Max(chartData.MaxTemp, tempInside)
+				chartData.MaxTemp = math.Max(chartData.MaxTemp, tempOutside)
 
 				chartData.DataTInside = append(chartData.DataTInside, tempInside)
 				chartData.DataTOutside = append(chartData.DataTOutside, tempOutside)
 				chartData.DataHumidity = append(chartData.DataHumidity, humidity)
 				chartData.Labels = append(chartData.Labels, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
 			}
+			dtemp := (chartData.MaxTemp - chartData.MinTemp) / 10
+			chartData.MinTemp -= dtemp
+			chartData.MaxTemp += dtemp
+			dhum := (chartData.MaxHumidity - chartData.MinHumidity) / 10
+			chartData.MinHumidity -= dhum
+			chartData.MaxHumidity += dhum
+
 			html, err2 := template.ParseFiles("main.html")
 			if err2 != nil {
 				c.String(http.StatusInternalServerError, fmt.Sprintf("Error parsing template: %q", err2))
