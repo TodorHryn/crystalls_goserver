@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Crystalls grower status</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+    </head>
+    <body>
+        <canvas id="line-chart" width="800" height="450"></canvas>
+        <script>
+            new Chart(document.getElementById("line-chart"), {
+                type: 'line',
+                data: {
+                    {{ .Data}}
+                },
+                options: {
+                    title: {
+                    display: true,
+                    text: '1234'
+                    }
+                }
+                });
+
+        </script>
+    </body>
+</html>

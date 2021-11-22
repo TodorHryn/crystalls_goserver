@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -11,9 +12,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-echarts/go-echarts/v2/charts"
-	"github.com/go-echarts/go-echarts/v2/opts"
-	"github.com/go-echarts/go-echarts/v2/types"
 	_ "github.com/lib/pq"
 )
 
@@ -76,6 +74,10 @@ func lastTemp(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+type ChartData struct {
+	Data string
+}
+
 func tempGet(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := maybeCreateTempDB(db); err != nil {
@@ -95,34 +97,9 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 		isEmpty := true
 
 		if len(charthtml) == 0 {
-			line := charts.NewLine()
-			line.SetGlobalOptions(
-				charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeMacarons}),
-				charts.WithTitleOpts(opts.Title{
-					Title:    "Temperature char",
-					Subtitle: "My temp chart",
-				}),
-				charts.WithLegendOpts(opts.Legend{
-					Show:   true,
-					Bottom: "5px",
-					TextStyle: &opts.TextStyle{
-						Color: "#000",
-					},
-				}),
-				charts.WithYAxisOpts(opts.YAxis{
-					Min:  "dataMin",
-					Max:  "dataMax",
-					Name: "Temp",
-				}, []int{0}),
-				charts.WithYAxisOpts(opts.YAxis{
-					Min:  "dataMin",
-					Max:  "dataMax",
-					Name: "Humidity",
-				}, []int{1}),
-			)
-			itemsTInside := make([]opts.LineData, 0)
-			itemsTOutside := make([]opts.LineData, 0)
-			itemsHum := make([]opts.LineData, 0)
+			itemsTInside := make([]float64, 0)
+			itemsTOutside := make([]float64, 0)
+			itemsHum := make([]float64, 0)
 			xaxis := make([]string, 0)
 			for rows.Next() {
 				var timestamp time.Time
@@ -138,21 +115,23 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 					continue
 				}
 
-				itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
-				itemsTOutside = append(itemsTOutside, opts.LineData{Value: tempOutside})
-				itemsHum = append(itemsHum, opts.LineData{Value: humidity, YAxisIndex: 1})
+				itemsTInside = append(itemsTInside, tempInside)
+				itemsTOutside = append(itemsTOutside, tempOutside)
+				itemsHum = append(itemsHum, humidity)
 				xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
 			}
-			line.SetXAxis(xaxis).AddSeries("Inside", itemsTInside).
-				SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
-				SetXAxis(xaxis).AddSeries("Humidity", itemsHum).
-				SetSeriesOptions(
-					charts.WithLineChartOpts(opts.LineChart{Smooth: true, YAxisIndex: 0}),
-				)
+			html, err2 := template.ParseFiles("main.html")
+			if err2 != nil {
+				c.String(http.StatusInternalServerError, fmt.Sprintf("Error parsing template: %q", err2))
+				return
+			}
 
-			html := new(bytes.Buffer)
-			line.Render(html)
-			charthtml = html.String()
+			var chartData ChartData
+			chartData.Data = "Hello!"
+
+			htmlBuf := new(bytes.Buffer)
+			html.Execute(htmlBuf, chartData)
+			charthtml = htmlBuf.String()
 		} else {
 			isEmpty = false
 		}
