@@ -134,18 +134,14 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 
 				itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
 				itemsTOutside = append(itemsTOutside, opts.LineData{Value: tempOutside})
-				itemsHum = append(itemsHum, opts.LineData{Value: humidity})
+				itemsHum = append(itemsHum, opts.LineData{Value: humidity, YAxisIndex: 1})
 				xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
 			}
 			line.SetXAxis(xaxis).AddSeries("Inside", itemsTInside).
 				SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
-				SetSeriesOptions(
-					charts.WithLineChartOpts(opts.LineChart{Smooth: true, YAxisIndex: 0}),
-				)
-			line.
 				SetXAxis(xaxis).AddSeries("Humidity", itemsHum).
 				SetSeriesOptions(
-					charts.WithLineChartOpts(opts.LineChart{Smooth: true, YAxisIndex: 1}),
+					charts.WithLineChartOpts(opts.LineChart{Smooth: true, YAxisIndex: 0}),
 				)
 
 			html := new(bytes.Buffer)
