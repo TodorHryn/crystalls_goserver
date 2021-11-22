@@ -190,8 +190,8 @@ func tempDump(db *sql.DB) gin.HandlerFunc {
 				continue
 			}
 
-			tempInsideDump += fmt.Sprintf(" %02d", tempInside)
-			tempOutsideDump += fmt.Sprintf(" %02d", tempOutside)
+			tempInsideDump += fmt.Sprintf(" %0.2f", tempInside)
+			tempOutsideDump += fmt.Sprintf(" %0.2f", tempOutside)
 		}
 
 		if isEmpty {
