@@ -121,7 +121,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 					return
 				}
 
-				if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 || humidity <= 0 || humidity > 100 {
+				if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 || humidity <= 0 || humidity > 100 || math.IsNaN(humidity) {
 					continue
 				}
 
