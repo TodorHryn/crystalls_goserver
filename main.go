@@ -24,7 +24,8 @@ func maybeCreateTempDB(db *sql.DB) error {
 		`CREATE TABLE IF NOT EXISTS tempdata(
 			time timestamp PRIMARY KEY,
 			tempInside real NOT NULL,
-			tempOutside real NOT NULL
+			tempOutside real NOT NULL,
+			humidity real NOT NULL
 		)`)
 
 	return err
@@ -82,7 +83,7 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		rows, err := db.Query(`SELECT time, tempInside, tempOutside FROM tempdata`)
+		rows, err := db.Query(`SELECT time, tempInside, tempOutside, humidity FROM tempdata`)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, fmt.Sprintf("Error selecting data: %q", err))
@@ -115,29 +116,36 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 			)
 			itemsTInside := make([]opts.LineData, 0)
 			itemsTOutside := make([]opts.LineData, 0)
+			itemsHum := make([]opts.LineData, 0)
 			xaxis := make([]string, 0)
 			for rows.Next() {
 				var timestamp time.Time
-				var tempInside, tempOutside float64
+				var tempInside, tempOutside, humidity float64
 				isEmpty = false
 
-				if err := rows.Scan(&timestamp, &tempInside, &tempOutside); err != nil {
+				if err := rows.Scan(&timestamp, &tempInside, &tempOutside, &humidity); err != nil {
 					c.String(http.StatusInternalServerError, fmt.Sprintf("Error scanning data: %q", err))
 					return
 				}
 
-				if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 {
+				if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 || humidity <= 0 || humidity > 100 {
 					continue
 				}
 
 				itemsTInside = append(itemsTInside, opts.LineData{Value: tempInside})
 				itemsTOutside = append(itemsTOutside, opts.LineData{Value: tempOutside})
+				itemsHum = append(itemsHum, opts.LineData{Value: humidity})
 				xaxis = append(xaxis, fmt.Sprintf("%02d:%02d:%02d", (timestamp.Hour()+3)%24, timestamp.Minute(), timestamp.Second()))
 			}
 			line.SetXAxis(xaxis).AddSeries("Inside", itemsTInside).
 				SetXAxis(xaxis).AddSeries("Outside", itemsTOutside).
 				SetSeriesOptions(
-					charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
+					charts.WithLineChartOpts(opts.LineChart{Smooth: true, YAxisIndex: 0}),
+				)
+			line.
+				SetXAxis(xaxis).AddSeries("Humidity", itemsHum).
+				SetSeriesOptions(
+					charts.WithLineChartOpts(opts.LineChart{Smooth: true, YAxisIndex: 1}),
 				)
 
 			html := new(bytes.Buffer)
@@ -163,7 +171,7 @@ func tempDump(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		rows, err := db.Query(`SELECT time, tempInside, tempOutside FROM tempdata`)
+		rows, err := db.Query(`SELECT time, tempInside, tempOutside, humidity FROM tempdata`)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, fmt.Sprintf("Error selecting data: %q", err))
@@ -175,29 +183,31 @@ func tempDump(db *sql.DB) gin.HandlerFunc {
 		isEmpty := true
 		var tempInsideDump string
 		var tempOutsideDump string
+		var humDump string
 
 		for rows.Next() {
 			var timestamp time.Time
-			var tempInside, tempOutside float64
+			var tempInside, tempOutside, hum float64
 			isEmpty = false
 
-			if err := rows.Scan(&timestamp, &tempInside, &tempOutside); err != nil {
+			if err := rows.Scan(&timestamp, &tempInside, &tempOutside, &hum); err != nil {
 				c.String(http.StatusInternalServerError, fmt.Sprintf("Error scanning data: %q", err))
 				return
 			}
 
-			if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 {
+			if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 || hum <= 0 || hum > 100 {
 				continue
 			}
 
 			tempInsideDump += fmt.Sprintf(" %0.2f", tempInside)
 			tempOutsideDump += fmt.Sprintf(" %0.2f", tempOutside)
+			humDump += fmt.Sprintf(" %0.2f", hum)
 		}
 
 		if isEmpty {
 			c.String(http.StatusOK, "No data available")
 		} else {
-			c.String(http.StatusOK, tempInsideDump+"\n"+tempOutsideDump)
+			c.String(http.StatusOK, tempInsideDump+"\n"+tempOutsideDump+"\n"+humDump)
 		}
 	}
 }
@@ -219,8 +229,13 @@ func tempPush(db *sql.DB) gin.HandlerFunc {
 			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong param \"outside\": %q", err))
 			return
 		}
+		humidity, err := strconv.ParseFloat(c.Query("humidity"), 32)
+		if err != nil {
+			c.String(http.StatusBadRequest, fmt.Sprintf("Wrong param \"humidity\": %q", err))
+			return
+		}
 
-		if _, err := db.Exec("INSERT INTO tempdata VALUES($1, $2, $3)", time.Now(), tempInside, tempOutside); err != nil {
+		if _, err := db.Exec("INSERT INTO tempdata VALUES($1, $2, $3, $4)", time.Now(), tempInside, tempOutside, humidity); err != nil {
 			c.String(http.StatusInternalServerError, fmt.Sprintf("Error inserting data: %q", err))
 			return
 		}
