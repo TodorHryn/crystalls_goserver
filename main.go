@@ -121,8 +121,14 @@ func tempGet(db *sql.DB) gin.HandlerFunc {
 					return
 				}
 
-				if tempInside < 2 || tempInside > 40 || tempOutside < 2 || tempOutside > 40 || humidity <= 0 || humidity > 100 {
-					continue
+				if tempInside < 2 || tempInside > 40 {
+					tempInside = math.NaN()
+				}
+				if tempOutside < 2 || tempOutside > 40 {
+					tempOutside = math.NaN()
+				}
+				if humidity <= 0 || humidity > 100 {
+					humidity = math.NaN()
 				}
 
 				chartData.MinHumidity = math.Min(chartData.MinHumidity, humidity)
