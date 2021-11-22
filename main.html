@@ -13,20 +13,25 @@
                     labels: {{ .Labels}},
                     datasets: [{
                         data : {{ .DataTInside}},
-                        label : "Temp inside"
+                        label : "Temp inside",
+                        borderColor: "rgb(255, 99, 132)",
+                        fill : false
                     }, {
                         data : {{ .DataTOutside}},
-                        label : "Temp outside"
+                        label : "Temp outside",
+                        borderColor : "rgb(75, 192, 192)",
+                        fill : false
                     }, {
                         data : {{ .DataHumidity}},
-                        label : "Humidity"
-                    }
-                    ]
+                        label : "Humidity",
+                        borderColor : "rgb(54, 162, 235)",
+                        fill : false
+                    }]
                 },
                 options: {
                     title: {
                     display: true,
-                    text: '1234'
+                    text: 'Crystall grower status'
                     }
                 }
                 });
