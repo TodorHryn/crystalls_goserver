@@ -15,23 +15,38 @@
                         data : {{ .DataTInside}},
                         label : "Temp inside",
                         borderColor: "rgb(255, 99, 132)",
-                        fill : false
+                        fill : false,
+                        yAxisID : "Temp"
                     }, {
                         data : {{ .DataTOutside}},
                         label : "Temp outside",
                         borderColor : "rgb(75, 192, 192)",
-                        fill : false
+                        fill : false,
+                        yAxisID : "Temp"
                     }, {
                         data : {{ .DataHumidity}},
                         label : "Humidity",
                         borderColor : "rgb(54, 162, 235)",
-                        fill : false
+                        fill : false,
+                        yAxisID : "Humidity"
                     }]
                 },
                 options: {
                     title: {
-                    display: true,
-                    text: 'Crystall grower status'
+                        display: true,
+                        text: 'Crystall grower status'
+                    },
+                    scales: {
+                        yAxes: [{
+                            id : "Temp",
+                            type : "linear",
+                            position : "left"
+                        },
+                        {
+                            id : "Humidity",
+                            type : "linear",
+                            position : "right"
+                        }]
                     }
                 }
                 });
